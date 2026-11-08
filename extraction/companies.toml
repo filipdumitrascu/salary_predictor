@@ -1,0 +1,422 @@
+# The companies whose careers sites are read (sources of the dataset).
+#
+# Chosen from a first full scan of 72 companies (Nov 2026): kept are the companies with at least
+# 10 US job ads that state a salary. Three more are kept because a reader fix recovers their salaries:
+# Cloudflare (its cities are in Greenhouse's "offices" field), OpenAI (Ashby gives the pay range in a
+# separate field) and Apple (the pay is on each job's page). Left out: companies with no US jobs, and
+# companies whose US ads state no salary we can read (IBM, Garmin, Nokia, Jane Street, EA...).
+#
+# Every block: slug (id), name, industry (set by hand, see README), platform (= a file in readers/),
+# and the platform's own settings (board, host, tenant, site...). "domain" is needed by Eightfold.
+
+# --- software_internet ---
+
+[[company]]
+slug = "amazon"
+name = "Amazon"
+industry = "software_internet"
+domain = "amazon.jobs"
+platform = "amazon"
+countries = ["USA"]  # Amazon's site uses three-letter country codes
+
+[[company]]
+slug = "oracle"
+name = "Oracle"
+industry = "software_internet"
+domain = "oracle.com"
+platform = "oraclecloud"
+host = "eeho.fa.us2.oraclecloud.com"
+site = "CX_45001"
+
+[[company]]
+slug = "google"
+name = "Google"
+industry = "software_internet"
+domain = "google.com"
+platform = "google"
+
+[[company]]
+slug = "microsoft"
+name = "Microsoft"
+industry = "software_internet"
+domain = "microsoft.com"
+platform = "eightfold"
+host = "apply.careers.microsoft.com"
+
+[[company]]
+slug = "salesforce"
+name = "Salesforce"
+industry = "software_internet"
+domain = "salesforce.com"
+platform = "workday"
+host = "salesforce.wd12.myworkdayjobs.com"
+tenant = "salesforce"
+site = "External_Career_Site"
+
+[[company]]
+slug = "databricks"
+name = "Databricks"
+industry = "software_internet"
+domain = "databricks.com"
+platform = "greenhouse"
+board = "databricks"
+
+[[company]]
+slug = "datadog"
+name = "Datadog"
+industry = "software_internet"
+domain = "datadoghq.com"
+platform = "greenhouse"
+board = "datadog"
+
+[[company]]
+slug = "crowdstrike"
+name = "CrowdStrike"
+industry = "software_internet"
+domain = "crowdstrike.com"
+platform = "workday"
+host = "crowdstrike.wd5.myworkdayjobs.com"
+tenant = "crowdstrike"
+site = "crowdstrikecareers"
+
+[[company]]
+slug = "adobe"
+name = "Adobe"
+industry = "software_internet"
+domain = "adobe.com"
+platform = "workday"
+host = "adobe.wd5.myworkdayjobs.com"
+tenant = "adobe"
+site = "external_experienced"
+
+[[company]]
+slug = "airbnb"
+name = "Airbnb"
+industry = "software_internet"
+domain = "airbnb.com"
+platform = "greenhouse"
+board = "airbnb"
+
+[[company]]
+slug = "atlassian"
+name = "Atlassian"
+industry = "software_internet"
+domain = "atlassian.com"
+platform = "atlassian"
+
+[[company]]
+slug = "cloudflare"
+name = "Cloudflare"
+industry = "software_internet"
+domain = "cloudflare.com"
+platform = "greenhouse"
+board = "cloudflare"
+
+[[company]]
+slug = "anthropic"
+name = "Anthropic"
+industry = "software_internet"
+domain = "anthropic.com"
+platform = "greenhouse"
+board = "anthropic"
+# not in the first scan; added by hand (US ads state "Annual Salary: $X - $Y USD")
+
+[[company]]
+slug = "openai"
+name = "OpenAI"
+industry = "software_internet"
+domain = "openai.com"
+platform = "ashby"
+board = "openai"
+
+# --- semiconductors ---
+
+[[company]]
+slug = "nvidia"
+name = "NVIDIA"
+industry = "semiconductors"
+domain = "nvidia.com"
+platform = "workday"
+host = "nvidia.wd5.myworkdayjobs.com"
+tenant = "nvidia"
+site = "NVIDIAExternalCareerSite"
+
+[[company]]
+slug = "intel"
+name = "Intel"
+industry = "semiconductors"
+domain = "intel.com"
+platform = "workday"
+host = "intel.wd1.myworkdayjobs.com"
+tenant = "intel"
+site = "External"
+
+[[company]]
+slug = "analog-devices"
+name = "Analog Devices"
+industry = "semiconductors"
+domain = "analog.com"
+platform = "workday"
+host = "analogdevices.wd1.myworkdayjobs.com"
+tenant = "analogdevices"
+site = "External"
+
+[[company]]
+slug = "microchip"
+name = "Microchip"
+industry = "semiconductors"
+domain = "microchip.com"
+platform = "workday"
+host = "microchiphr.wd5.myworkdayjobs.com"
+tenant = "microchiphr"
+site = "External"
+
+[[company]]
+slug = "infineon"
+name = "Infineon"
+industry = "semiconductors"
+domain = "infineon.com"
+platform = "eightfold"
+host = "jobs.infineon.com"
+
+[[company]]
+slug = "nxp"
+name = "NXP Semiconductors"
+industry = "semiconductors"
+domain = "nxp.com"
+platform = "workday"
+host = "nxp.wd3.myworkdayjobs.com"
+tenant = "nxp"
+site = "careers"
+
+# --- hardware_electronics ---
+
+[[company]]
+slug = "apple"
+name = "Apple"
+industry = "hardware_electronics"
+domain = "apple.com"
+platform = "apple"
+countries = ["US"]
+# 0 salaries in the first scan: the pay range is only on each job's page, which the reader now reads
+
+[[company]]
+slug = "cisco"
+name = "Cisco"
+industry = "hardware_electronics"
+domain = "cisco.com"
+platform = "workday"
+host = "cisco.wd5.myworkdayjobs.com"
+tenant = "cisco"
+site = "Cisco_Careers"
+
+[[company]]
+slug = "hp"
+name = "HP"
+industry = "hardware_electronics"
+domain = "hp.com"
+platform = "workday"
+host = "hp.wd5.myworkdayjobs.com"
+tenant = "hp"
+site = "ExternalCareerSite"
+
+[[company]]
+slug = "lenovo"
+name = "Lenovo"
+industry = "hardware_electronics"
+domain = "lenovo.com"
+platform = "avature"
+base = "https://jobs.lenovo.com/en_US/careers"
+
+[[company]]
+slug = "keysight"
+name = "Keysight"
+industry = "hardware_electronics"
+domain = "keysight.com"
+platform = "jibe"
+base = "https://jobs.keysight.com"
+job_path = "/jobs"
+
+# --- it_services ---
+
+[[company]]
+slug = "accenture"
+name = "Accenture"
+industry = "it_services"
+domain = "accenture.com"
+platform = "accenture"
+country_sites = ["us-en"]
+
+[[company]]
+slug = "nagarro"
+name = "Nagarro"
+industry = "it_services"
+domain = "nagarro.com"
+platform = "smartrecruiters"
+board = "Nagarro1"
+
+# --- trading ---
+
+[[company]]
+slug = "drw"
+name = "DRW"
+industry = "trading"
+domain = "drw.com"
+platform = "greenhouse"
+board = "drweng"
+
+[[company]]
+slug = "hudson-river-trading"
+name = "Hudson River Trading"
+industry = "trading"
+domain = "hudsonrivertrading.com"
+platform = "greenhouse"
+board = "wehrtyou"
+
+[[company]]
+slug = "imc"
+name = "IMC Trading"
+industry = "trading"
+domain = "imc.com"
+platform = "greenhouse"
+board = "imc"
+
+[[company]]
+slug = "optiver"
+name = "Optiver"
+industry = "trading"
+domain = "optiver.com"
+platform = "greenhouse"
+board = "optiverus"
+
+[[company]]
+slug = "jump-trading"
+name = "Jump Trading"
+industry = "trading"
+domain = "jumptrading.com"
+platform = "greenhouse"
+board = "jumptrading"
+
+[[company]]
+slug = "sig"
+name = "Susquehanna (SIG)"
+industry = "trading"
+domain = "sig.com"
+platform = "jibe"
+base = "https://careers.sig.com"
+job_path = "/jobs"
+
+# --- banking_finance ---
+
+[[company]]
+slug = "deutsche-bank"
+name = "Deutsche Bank"
+industry = "banking_finance"
+domain = "db.com"
+platform = "workday"
+host = "db.wd3.myworkdayjobs.com"
+tenant = "db"
+site = "DBWebsite"
+
+[[company]]
+slug = "lseg"
+name = "LSEG"
+industry = "banking_finance"
+domain = "lseg.com"
+platform = "workday"
+host = "lseg.wd3.myworkdayjobs.com"
+tenant = "lseg"
+site = "Careers"
+
+[[company]]
+slug = "ing"
+name = "ING"
+industry = "banking_finance"
+domain = "ing.com"
+platform = "radancy"
+base = "https://careers.ing.com/en"
+
+[[company]]
+slug = "stripe"
+name = "Stripe"
+industry = "banking_finance"
+domain = "stripe.com"
+platform = "greenhouse"
+board = "stripe"
+
+[[company]]
+slug = "adyen"
+name = "Adyen"
+industry = "banking_finance"
+domain = "adyen.com"
+platform = "greenhouse"
+board = "adyen"
+
+# --- automotive_industrial ---
+
+[[company]]
+slug = "bosch"
+name = "Bosch"
+industry = "automotive_industrial"
+domain = "bosch.com"
+platform = "smartrecruiters"
+board = "BoschGroup"
+
+[[company]]
+slug = "borgwarner"
+name = "BorgWarner"
+industry = "automotive_industrial"
+domain = "borgwarner.com"
+platform = "workday"
+host = "borgwarner.wd5.myworkdayjobs.com"
+tenant = "borgwarner"
+site = "BorgWarner_Careers"
+
+[[company]]
+slug = "continental"
+name = "Continental"
+industry = "automotive_industrial"
+domain = "continental.com"
+platform = "smartrecruiters"
+board = "Continental"
+
+# --- telecom ---
+
+[[company]]
+slug = "ericsson"
+name = "Ericsson"
+industry = "telecom"
+domain = "ericsson.com"
+platform = "eightfold"
+host = "jobs.ericsson.com"
+
+# --- media_entertainment ---
+
+[[company]]
+slug = "netflix"
+name = "Netflix"
+industry = "media_entertainment"
+domain = "netflix.com"
+platform = "eightfold"
+host = "explore.jobs.netflix.net"
+api = "v2"
+
+[[company]]
+slug = "spotify"
+name = "Spotify"
+industry = "media_entertainment"
+domain = "spotify.com"
+platform = "lever"
+board = "spotify"
+
+# --- aerospace_defense ---
+
+[[company]]
+slug = "thales"
+name = "Thales"
+industry = "aerospace_defense"
+domain = "thalesgroup.com"
+platform = "phenom"
+host = "careers.thalesgroup.com"
+lang = "en_global"
+path = "global/en"
