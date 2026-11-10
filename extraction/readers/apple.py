@@ -46,10 +46,11 @@ def list_jobs(c):
 
 
 def _texts(value, out):
-    """Every text of 40+ characters inside a JSON value (the ad's sections), in order."""
+    """Every text of 40+ characters inside a JSON value (the ad's sections), in order, without the site's interface texts."""
     if isinstance(value, dict):
-        for v in value.values():
-            _texts(v, out)
+        for k, v in value.items():
+            if k != "translations":  # the site's interface texts ("Please enable Javascript..."), not the ad
+                _texts(v, out)
     elif isinstance(value, list):
         for v in value:
             _texts(v, out)

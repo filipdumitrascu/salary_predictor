@@ -221,7 +221,8 @@ def test_greenhouse_locations():
 
 def test_apple_page():
     from extraction.readers.apple import page_text
-    data = {"jobDetails": {"positionId": "200", "description": "You will plan content for AI search and work with teams.",
+    data = {"translations": {"common": {"noJavascript": "Please enable Javascript in your browser for best experience."}},
+            "jobDetails": {"positionId": "200", "description": "You will plan content for AI search and work with teams.",
             "minimumQualifications": "5+ years of experience in content strategy and SEO.",
             "payAndBenefits": {"content": "At Apple, base pay is one part of our total compensation package and is determined "
                                "within a range. Your base pay will be between $171,600 and $280,000, and your base pay "
@@ -229,7 +230,7 @@ def test_apple_page():
     literal = json.dumps(json.dumps(data))  # how the page carries it: a JS string holding JSON
     page = f"<html><script>window.__staticRouterHydrationData = JSON.parse({literal});</script></html>"
     text = page_text(page)
-    assert "5+ years" in text
+    assert "5+ years" in text and "Javascript" not in text
     j = n("AI Optimization Content Strategist", text)
     assert (j["salary_min"], j["salary_max"], j["salary_period"], j["years_min"]) == (171600, 280000, "year", 5)
 
