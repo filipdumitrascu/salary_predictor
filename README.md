@@ -18,7 +18,7 @@ companies.toml ────crawl.py──▶ data/raw/<company>.jsonl.gz ──�
 ```
 data/intermediate/jobs.csv ──measuring_data.ipynb──▶ tables + docs/figures/*.png      (3) measure, nothing is changed
 
-data/intermediate/jobs.csv ──clean.py──▶ jobs_clean.csv ──integrate.py──▶ jobs_integrated.csv ──▶ transformation, reduction, discretization (next) ──▶ model
+data/intermediate/jobs.csv ──clean.py──▶ jobs_clean.csv ──integrate.py──▶ jobs_integrated.csv ──transform.py──▶ train_transformed.csv + test_transformed.csv ──▶ reduction, discretization (next) ──▶ model
 ```
 
 Each step reads the previous step's files and writes new ones; collected data is never edited.
@@ -32,6 +32,7 @@ in seconds, without collecting again. A change in a reader (a field it did not s
 | 3 | `preprocessing/measuring_data.ipynb` | measures every column by its scale, draws the plots | change the data |
 | 4 | `preprocessing/clean.py` | missing values, wrong salaries, noise in titles | remove duplicates, convert salaries |
 | 5 | `preprocessing/integrate.py` | duplicates, salary units, redundant columns | build the target, encode, scale |
+| 6 | `preprocessing/transform.py` | builds the target and new features, splits train / test, encodes, normalizes | choose the features |
 
 ## Data sources
 
@@ -229,7 +230,7 @@ The method used for each column:
 | seniority, work_mode, employment_type, degree, states, cities | 4,255 to 12,620 rows | **global constant** `"unknown"` | MNAR / MAR: "not stated" is a category of its own |
 | office_days | 95.7% | **drop the column** | too few values to use |
 | detail_error | 100% | **drop the column** | no values |
-| years_min, years_max, posted_date | 29.7%, 1.4% | **attribute median**, but later, at training | a median over all rows would include the test rows; imputers are fitted on the training set only |
+| years_min, years_max, posted_date | 29.7%, 1.4% | **attribute median**, later, in `transform.py` after the train / test split | a median over all rows would include the test rows; imputers are fitted on the training set only |
 | skills | 31.7% | none | not missing: the ad names none of the 43 skills, so every skill is 0 |
 
 Not used: filling in by hand (thousands of rows), the class mean (the class is the salary we predict), the most
@@ -349,6 +350,96 @@ Pearson for numeric pairs, Spearman for an ordinal and a numeric one, chi-square
 | written | **25,385** |
 
 ### 5. Data transformation
+
+Script `preprocessing/transform.py`: `data/intermediate/jobs_integrated.csv` (25,385 rows, 26 columns) →
+`data/intermediate/train_transformed.csv` (20,308 rows) and `test_transformed.csv` (5,077 rows), 199 columns.
+Every column a model uses is now a number.
+
+#### Train / test split
+
+Normalization and imputation learn values from the data (a mean, a min, a median). If they are learned on
+all rows, the test rows leak into the training. So the rows are split first, 80% train and 20% test, at
+random (seed 42). Every value is then learned on train and applied to both. The split happens after
+integration, so copies of one job cannot end up on both sides.
+
+#### Smoothing
+
+Done at cleaning (noisy data). Not repeated here.
+
+#### Attribute (feature) construction
+
+| New column | Built from | Why |
+|---|---|---|
+| `salary` | (`salary_min` + `salary_max`) / 2, yearly USD | the target: one number per ad |
+| `log_salary` | log(`salary`) | the salary is skewed right; skewness 1.99 → -0.43 |
+| `days_old` | crawl day (2026-11-05) - `posted_date`, in days | a date is an interval value; its age in days is a ratio value a model can use |
+| `n_skills` | number of skills in `skills` | how technical the ad is |
+| `<col>_missing` | 1 where the value was missing, 0 otherwise | keeps "the ad does not say it" after the gap is filled (see below) |
+
+Already built at extraction, from the title and the description: `seniority`, `role_family`, `years_*`,
+`degree`, `skills`, `work_mode`.
+
+#### Aggregation
+
+Not the case. One row is one ad, and the model predicts one ad. The aggregation that fits here (the mean
+salary of each company, used as a feature) is computed from the target, so it leaks the answer into the
+features. It is not used.
+
+#### Generalization
+
+`industry` is a generalization of `company` (10 groups instead of 45), set by hand. Both are encoded; the
+choice between them is made at reduction. Concept hierarchies: see Data discretization.
+
+#### Encoding
+
+| Kind | Columns | How | Result |
+|---|---|---|---|
+| ordinal encoding | seniority, degree, work_mode, employment_type | position in the order (intern = 0 ... director = 6) | 4 columns |
+| one-hot | company, industry, role_family | one 0/1 column per value | 45 + 10 + 18 columns |
+| multi-hot | skills, states (several values per ad) | one 0/1 column per value; an ad can have several 1s | 43 + 52 columns (`state_unknown` included) |
+| label encoding of nominal columns | | not used: a number per company (amazon = 0, apple = 1) invents an order that does not exist | |
+| not encoded | title (20,864 values), cities (1,368) | too many values for one column each; their content is already in role_family, seniority and states | left as text |
+
+#### Missing values left from cleaning
+
+The values that were not filled at cleaning are filled here, with the **train median**. The `lower`
+median is used, so the value is one that exists (a category, for an ordinal). A 0/1 column `<col>_missing`
+records where a value was filled.
+
+| Column | Train rows filled | With |
+|---|---|---|
+| seniority (unknown) | 7,666 | staff |
+| degree (unknown) | 5,586 | bachelor |
+| work_mode (unknown) | 9,508 | onsite |
+| employment_type (unknown) | 7,552 | full-time |
+| years_min / years_max | 5,680 | 5 / 6 |
+| days_old | 98 | 33 days |
+
+#### Normalization
+
+Columns with different ranges (years 0-20, ads up to 121 locations) would weigh differently in models
+that use distances or gradients (k-NN, linear regression, neural networks).
+
+| Method | Formula | Columns | Result |
+|---|---|---|---|
+| min-max | (x - min) / (max - min) | the 4 ordinal codes | values in [0, 1] |
+| z-score | (x - mean) / std | years_min, years_max, days_old, n_locations, n_skills | train: mean 0, std 1; test: mean within ±0.02, std 0.99-1.00 |
+| log, before z-score | log(1 + x) | days_old, n_locations (a long right tail: posted_date had skewness -7.5, so its age +7.5; n_locations 6.4) | the long tail is pulled in |
+| decimal scaling | x / 10^j | not used | it only moves the decimal point: the values are not centered, and the outliers stay as far out |
+| none | | the 0/1 columns | already in [0, 1] |
+
+The target is not normalized. The model learns `log_salary`, and its prediction is turned back into
+dollars with exp.
+
+#### Result
+
+| | Train | Test |
+|---|---|---|
+| rows | 20,308 | 5,077 |
+| columns | 199 | 199 |
+
+The columns that are not used as features (`job_id`, `url`, `title`, `cities`, `salary_text`, `salary_min`,
+`salary_period`, ...) are still in the files; they are chosen between at reduction.
 
 ### 6. Data reduction
 
