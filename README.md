@@ -196,10 +196,12 @@ max 2026-11-05; IQR 70 days, std 138 days, skewness -7.5, kurtosis 85. 849 ads w
 | Amazon is 39% of the ads (Apple 10.7%), software_internet 65%; CA and WA hold most ads | reduction (sampling) |
 | `office_days` is 95.7% empty; seniority, work_mode, employment_type, degree, years 30-46% empty, because the ad does not say it (not MCAR) | cleaning: missing values |
 | 15.3% of the ads have no salary, so they cannot train the model | cleaning: missing values |
-| the salary mixes year, hour and month (25,903 / 1,178 / 37 rows) and USD, EUR, CAD; the mix shows at the low end (min 5, P5 51,400 against 8,625 and 70,350 for yearly) | cleaning (currency), integration (units) |
+| the salary mixes year, hour and month (25,903 / 1,178 / 37 rows) and USD, EUR, CAD; the mix shows at the low end (min 5, P5 51,400 against 8,625 and 70,350 for yearly) | cleaning: noise (currency), integration: inconsistencies (units) |
 | yearly salary is skewed right (median 143,700 < mean 149,144, skewness 1.9) with heavy tails (kurtosis 7.6); the midrange is three times the median | transformation (log of the target) |
 | not every outlier is wrong: the max ($890,000 - $1,690,000, Netflix) is stated in the ad; the min (8,625, Amazon) is a night-shift bonus | cleaning: outliers |
 | `title` has 23,379 distinct values for 32,010 ads, with spelling variants; `role_family` has `other` as its mode | cleaning: noise |
+| 157 rows are exact duplicates (same `job_id`); 2,658 more are the same job under another id (same company, title, salary and description length) | integration: duplicates |
+| `company_name` has one value per `company`; `collected_date` has one value for all rows | integration: redundancy |
 | `seniority`: `lead` (19.2%) holds mostly managers ("Area Manager II"), so its place in the order is debatable | transformation (encoding) |
 
 ### 3. Data cleaning
@@ -218,7 +220,7 @@ In this dataset an empty cell almost always means "the ad does not say it" (MNAR
 also depends on the company: some platforms never give `work_mode` (MAR). So "not stated" is
 information, and it is kept, not guessed.
 
-Methods from the course, and the one used for each column:
+The method used for each column:
 
 | Column | Missing | Method | Why |
 |---|---|---|---|
@@ -236,8 +238,8 @@ probable value from a model (more complex than needed for these columns).
 #### Noisy data
 
 Noise is a random error in a value. Here it comes from the extraction rules: an amount near a pay word
-that is not the salary. The course methods are binning (smoothing by bin means, medians or boundaries),
-regression, clustering, and **combined computer and human inspection**. The last one was used:
+that is not the salary. It can be handled by binning (smoothing by bin means, medians or boundaries),
+regression, clustering, or **combined computer and human inspection**. The last one was used:
 - the measures pointed to suspicious values (the min, the low percentiles, the currencies);
 - each case was read by hand in `salary_text`;
 - a rule removes the cases of that kind.
@@ -279,6 +281,72 @@ the minimum wage rule, not by IQR. The skewed salary is handled later (transform
 | written | **27,069** |
 
 ### 4. Data integration
+
+Script `preprocessing/integrate.py`: `data/intermediate/jobs_clean.csv` (27,069 rows) →
+`data/intermediate/jobs_integrated.csv` (25,385 rows). The dataset merges 45 sources (companies) read
+through 17 hiring platforms, so this step checks what happens when the same job or the same kind of value
+comes from different places.
+
+#### Schema integration
+
+Each platform names its fields differently (the locations are `location` + `additionalLocations` on Workday,
+`location.name` on Greenhouse, ...).
+They are mapped to one schema when collecting: one reader per platform in `extraction/readers/` writes the
+same fields for every company. The industry, which no platform gives, is added from `companies.toml`.
+Nothing is left to do here.
+
+#### Duplicates
+
+| Kind | How it is found | Rows dropped | Kept |
+|---|---|---|---|
+| exact | every column equal, same `job_id` (Accenture lists some jobs on two pages) | 150 | one copy |
+| same `job_id`, different values | | 0, not the case | |
+| partial: the same job under another id (a repost, or one copy per city) | same company, title, salary range and description length | 1,534 (Amazon 889, Oracle 275, Apple 169) | the latest posted |
+| the same job at two companies | | not the case: every company is read from its own site | |
+
+The description is not in the CSV, so its length stands for it. Checked on the raw texts: in 611 of the 888
+partial groups the text is the same, and in the others only a city name or the order of the bullets differs.
+Not duplicates: same company, title and salary with another description (another team); they are kept.
+
+Duplicates matter for the model: copies of one job in both the training and the test set make the test
+score look better than it is. The copy kept loses the cities of the dropped copies.
+
+#### Redundancy
+
+An attribute is redundant when another one gives it. It is found by dependencies and by correlation:
+Pearson for numeric pairs, Spearman for an ordinal and a numeric one, chi-square with Cramér's V
+(0 = independent, 1 = one decides the other) for nominal pairs.
+
+| Columns | Result | Decision |
+|---|---|---|
+| `company_name` / `company` | one name per company (1:1) | `company_name` dropped |
+| `locations` / `cities`, `states`, `countries`, `n_locations` | the four were read from `locations` | `locations` dropped |
+| `collected_date` | one value for all rows | dropped |
+| `industry` / `company` | Cramér's V = 1.00, the industry is set from the company | both kept: industry is a coarser level (10 groups, not 45); one is chosen at reduction |
+| `salary_min` / `salary_max` | Pearson 0.88 | both kept: they make the target (the middle of the range) |
+| `years_min` / `years_max` | Pearson 0.76 | both kept for now; one is chosen at reduction |
+| `seniority` / `years_min` | Spearman 0.18 | not redundant (`lead` holds managers who ask for few years) |
+| `seniority` / `role_family`, `seniority` / `degree`, `role_family` / `degree` | Cramér's V 0.24, 0.20, 0.21 | not redundant |
+
+#### Inconsistencies (value conflicts)
+
+| Conflict | Example | Decision |
+|---|---|---|
+| different units | the pay is per year, per hour or per month, depending on the company | converted to a year: hour × 2,080, month × 12 (1,053 rows); `salary_period` keeps the unit of the ad |
+| the same value written two ways | "GB \| US" and "US \| GB" | `countries` sorted: 29 → 21 distinct values |
+| different currencies | | not the case any more: the non-USD salaries were removed at cleaning |
+| missing values that depend on the source | `work_mode` is never given by HRT, IMC, Infineon, Optiver, SIG; `employment_type` by Atlassian, Cloudflare, DRW, Spotify, Stripe; `states` by Apple, CrowdStrike | kept as `unknown`; counted per company |
+| same field, different meaning | Amazon states one range for all US markets, others one per city; Keysight states min to midpoint; "posted" is the first post on some platforms and the last update on others | cannot be fixed from the data; written down as a limitation |
+| different date formats | | not the case: dates were written as YYYY-MM-DD at extraction |
+
+#### Result
+
+| | Rows |
+|---|---|
+| read | 27,069 |
+| exact duplicates | -150 |
+| partial duplicates | -1,534 |
+| written | **25,385** |
 
 ### 5. Data transformation
 
