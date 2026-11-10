@@ -113,7 +113,7 @@ Which measures each scale allows:
 
 ### 2. Measuring Data
 
-Notebook `preprocessing/measuring_data.ipynb`, on `data/intermediate/jobs.csv` (32,010 ads, 31 columns),
+Notebook `preprocessing/measuring_data.ipynb`, on `data/intermediate/jobs.csv` (31,901 ads, 31 columns),
 before any change. Each column gets the measures its scale allows (table above). Columns with several
 values in a cell (`states`, `cities`, `skills`) are split first; their percentages are "% of ads", so they
 add up to more than 100%. A mode is always shown with the share of missing values next to it.
@@ -122,10 +122,10 @@ add up to more than 100%. A mode is always shown with the share of missing value
 
 | Column | Missing | Column | Missing |
 |---|---|---|---|
-| office_days | 95.7% | skills | 31.7% |
-| work_mode | 45.6% | years_min, years_max | 29.7% |
-| seniority | 42.5% | salary_max | 17.5% |
-| employment_type | 36.6% | states / cities | 16.2% / 15.9% |
+| office_days | 95.7% | skills | 35.0% |
+| work_mode | 45.4% | years_min, years_max | 29.8% |
+| seniority | 42.4% | salary_max | 17.5% |
+| employment_type | 36.3% | states / cities | 15.9% / 15.7% |
 | degree | 33.1% | salary_min, currency, period | 15.3% |
 | posted_date | 1.4% | | |
 
@@ -135,18 +135,18 @@ add up to more than 100%. A mode is always shown with the share of missing value
 
 | Column | Mode | Mode % | Distinct | Missing |
 |---|---|---|---|---|
-| company | amazon | 39.0% | 45 | 0% |
-| industry | software_internet | 65.4% | 10 | 0% |
+| company | amazon | 39.1% | 45 | 0% |
+| industry | software_internet | 65.6% | 10 | 0% |
 | role_family | other | 18.9% | 18 | 0% |
-| states | CA | 29.0% | 51 | 16.2% |
-| cities | Seattle, WA | 16.3% | 1,368 | 15.9% |
-| title | Area Manager II | 0.7% | 23,379 | 0% |
+| states | CA | 29.1% | 51 | 15.9% |
+| cities | Seattle, WA | 16.4% | 1,368 | 15.7% |
+| title | Area Manager II | 0.7% | 23,318 | 0% |
 | salary_currency | USD | 84.6% | 3 | 15.3% |
-| salary_period | year | 80.9% | 3 | 15.3% |
-| seniority_source | title | 57.0% | 2 | 42.5% |
-| salary_period_source | stated | 55.7% | 2 | 15.3% |
+| salary_period | year | 81.0% | 3 | 15.3% |
+| seniority_source | title | 57.0% | 2 | 42.4% |
+| salary_period_source | stated | 56.0% | 2 | 15.3% |
 
-`skills`: AWS is in 22.8% of the ads, Python 22.1%, Machine Learning 18.6%; 31.7% name none of the 43.
+`skills`: AWS is in 22.8% of the ads, Python 22.1%, Machine Learning 18.5%; 35.0% name none of the 43.
 
 ![ads per company](docs/figures/company.png)
 
@@ -156,10 +156,10 @@ The median and quartiles are positions in the order, so they are always a catego
 
 | Column | Min | Q1 | Median | Q3 | Max | Mode | Missing |
 |---|---|---|---|---|---|---|---|
-| seniority | intern | senior | staff | lead | director | senior | 42.5% |
+| seniority | intern | senior | staff | lead | director | senior | 42.4% |
 | degree | bachelor | bachelor | bachelor | bachelor | phd | bachelor | 33.1% |
-| work_mode | remote | hybrid | onsite | onsite | onsite | onsite | 45.6% |
-| employment_type | contract | full-time | full-time | full-time | full-time | full-time | 36.6% |
+| work_mode | remote | hybrid | onsite | onsite | onsite | onsite | 45.4% |
+| employment_type | contract | full-time | full-time | full-time | full-time | full-time | 36.3% |
 
 ![seniority](docs/figures/seniority.png)
 
@@ -170,46 +170,46 @@ The full table is in the notebook; std and variance are the sample ones, kurtosi
 
 | Column | Mean | Median | Min | Q1 | Q3 | Max | Std | Skewness | Kurtosis | Outliers |
 |---|---|---|---|---|---|---|---|---|---|---|
-| years_min | 4.74 | 4 | 0 | 2 | 7 | 20 | 3.22 | 1.04 | 1.04 | 293 |
-| years_max | 6.05 | 5 | 0 | 3 | 8 | 20 | 3.42 | 0.67 | 0.17 | 85 |
+| years_min | 4.73 | 4 | 0 | 2 | 7 | 20 | 3.22 | 1.04 | 1.03 | 289 |
+| years_max | 6.04 | 5 | 0 | 3 | 8 | 20 | 3.42 | 0.67 | 0.16 | 83 |
 | office_days | 2.62 | 3 | 0 | 3 | 3 | 5 | 1.45 | -0.74 | -0.19 | 519 |
-| n_locations | 2.49 | 1 | 0 | 1 | 2 | 121 | 5.84 | 6.44 | 44.98 | 3,522 |
-| description_chars | 7,517 | 6,427 | 74 | 4,863 | 8,357 | 26,702 | 4,138 | 1.56 | 1.81 | 3,624 |
+| n_locations | 2.50 | 1 | 0 | 1 | 2 | 121 | 5.85 | 6.43 | 44.82 | 3,522 |
+| description_chars | 6,210 | 5,929 | 74 | 4,666 | 7,457 | 55,750 | 2,213 | 1.59 | 17.96 | 632 |
 
 **Salary (the target).** Measured over all rows and per pay period (USD only):
 
 | | Count | Mean | Median | Min | P5 | Q1 | Q3 | Max | Midrange | Std | Skewness | Kurtosis | Outliers |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| salary_min, all rows | 27,118 | 142,392 | 142,300 | 5 | 51,400 | 102,300 | 174,000 | 890,000 | 445,003 | 66,870 | 1.2 | 5.4 | 895 |
-| salary_min, year | 25,868 | 149,144 | 143,700 | 8,625 | 70,350 | 111,300 | 175,000 | 890,000 | 449,313 | 60,721 | 1.9 | 7.6 | 1,048 |
-| salary_max, year | 25,349 | 230,508 | 215,300 | 49,920 | 117,100 | 182,700 | 270,200 | 1,690,000 | 869,960 | 87,715 | 2.4 | 15.1 | 917 |
-| salary_min, hour | 1,178 | 31.6 | 28.0 | 5.0 | 18.2 | 23.0 | 38.0 | 196.7 | 100.9 | 14.3 | 3.8 | 30.1 | 42 |
+| salary_min, all rows | 27,020 | 142,468 | 142,300 | 5 | 52,000 | 102,300 | 174,000 | 890,000 | 445,003 | 66,829 | 1.2 | 5.4 | 894 |
+| salary_min, year | 25,792 | 149,122 | 143,700 | 8,625 | 70,350 | 111,300 | 175,000 | 890,000 | 449,313 | 60,768 | 1.9 | 7.6 | 1,047 |
+| salary_max, year | 25,273 | 230,234 | 215,250 | 49,920 | 117,100 | 182,400 | 269,080 | 1,690,000 | 869,960 | 87,671 | 2.4 | 15.2 | 933 |
+| salary_min, hour | 1,156 | 31.6 | 28.1 | 5.0 | 18.0 | 22.8 | 38.0 | 196.7 | 100.9 | 14.4 | 3.8 | 30.2 | 41 |
 | salary_min, month | 35 | 6,554 | 6,810 | 5,690 | 5,690 | 6,810 | 6,810 | 6,810 | 6,250 | 477 | -1.4 | -0.2 | 8 |
 
 ![salary](docs/figures/salary.png)
 
 **posted_date (interval).** Median 2026-09-30, mean 2026-08-24, mode 2026-10-30, min 2017-11-30,
-max 2026-11-05; IQR 70 days, std 138 days, skewness -7.5, kurtosis 85. 849 ads were posted before 2026.
+max 2026-11-05; IQR 70 days, std 138 days, skewness -7.6, kurtosis 86. 807 ads were posted before 2026.
 
 #### What the measures show
 
 | Finding | Goes to |
 |---|---|
-| Amazon is 39% of the ads (Apple 10.7%), software_internet 65%; CA and WA hold most ads | reduction (sampling) |
+| Amazon is 39% of the ads (Apple 10.4%), software_internet 65%; CA and WA hold most ads | reduction (sampling) |
 | `office_days` is 95.7% empty; seniority, work_mode, employment_type, degree, years 30-46% empty, because the ad does not say it (not MCAR) | cleaning: missing values |
 | 15.3% of the ads have no salary, so they cannot train the model | cleaning: missing values |
-| the salary mixes year, hour and month (25,903 / 1,178 / 37 rows) and USD, EUR, CAD; the mix shows at the low end (min 5, P5 51,400 against 8,625 and 70,350 for yearly) | cleaning: noise (currency), integration: inconsistencies (units) |
-| yearly salary is skewed right (median 143,700 < mean 149,144, skewness 1.9) with heavy tails (kurtosis 7.6); the midrange is three times the median | transformation (log of the target) |
+| the salary mixes year, hour and month (25,827 / 1,156 / 37 rows) and USD, EUR, CAD; the mix shows at the low end (min 5, P5 52,000 against 8,625 and 70,350 for yearly) | cleaning: noise (currency), integration: inconsistencies (units) |
+| yearly salary is skewed right (median 143,700 < mean 149,122, skewness 1.9) with heavy tails (kurtosis 7.6); the midrange is three times the median | transformation (log of the target) |
 | not every outlier is wrong: the max ($890,000 - $1,690,000, Netflix) is stated in the ad; the min (8,625, Amazon) is a night-shift bonus | cleaning: outliers |
-| `title` has 23,379 distinct values for 32,010 ads, with spelling variants; `role_family` has `other` as its mode | cleaning: noise |
-| 157 rows are exact duplicates (same `job_id`); 2,658 more are the same job under another id (same company, title, salary and description length) | integration: duplicates |
+| `title` has 23,318 distinct values for 31,901 ads, with spelling variants; `role_family` has `other` as its mode | cleaning: noise |
+| 157 rows are exact duplicates (same `job_id`); 2,597 more are the same job under another id (same company, title, salary and description length) | integration: duplicates |
 | `company_name` has one value per `company`; `collected_date` has one value for all rows | integration: redundancy |
 | `seniority`: `lead` (19.2%) holds mostly managers ("Area Manager II"), so its place in the order is debatable | transformation (encoding) |
 
 ### 3. Data cleaning
 
-Script `preprocessing/clean.py`: `data/intermediate/jobs.csv` (32,010 rows) → `data/intermediate/jobs_clean.csv`
-(27,069 rows). The decisions follow the findings of Measuring data.
+Script `preprocessing/clean.py`: `data/intermediate/jobs.csv` (31,901 rows) → `data/intermediate/jobs_clean.csv`
+(26,971 rows). The decisions follow the findings of Measuring data.
 
 #### Missing values
 
@@ -226,13 +226,13 @@ The method used for each column:
 
 | Column | Missing | Method | Why |
 |---|---|---|---|
-| salary (target) | 4,892 rows (15.3%) | **ignore the tuple** (drop the row) | without the target, a row cannot train the model |
+| salary (target) | 4,881 rows (15.3%) | **ignore the tuple** (drop the row) | without the target, a row cannot train the model |
 | salary_max | 695 rows | **fill from the same row**: `salary_max = salary_min` | the ad says "from $X", a single amount |
-| seniority, work_mode, employment_type, degree, states, cities | 4,255 to 12,620 rows | **global constant** `"unknown"` | MNAR / MAR: "not stated" is a category of its own |
+| seniority, work_mode, employment_type, degree, states, cities | 4,157 to 12,517 rows | **global constant** `"unknown"` | MNAR / MAR: "not stated" is a category of its own |
 | office_days | 95.7% | **drop the column** | too few values to use |
 | detail_error | 100% | **drop the column** | no values |
-| years_min, years_max, posted_date | 29.7%, 1.4% | **attribute median**, later, in `transform.py` after the train / test split | a median over all rows would include the test rows; imputers are fitted on the training set only |
-| skills | 31.7% | none | not missing: the ad names none of the 43 skills, so every skill is 0 |
+| years_min, years_max, posted_date | 29.8%, 1.4% | **attribute median**, later, in `transform.py` after the train / test split | a median over all rows would include the test rows; imputers are fitted on the training set only |
+| skills | 35.0% | none | not missing: the ad names none of the 43 skills, so every skill is 0 |
 
 Not used: filling in by hand (thousands of rows), the class mean (the class is the salary we predict), the most
 probable value from a model (more complex than needed for these columns).
@@ -252,7 +252,7 @@ regression, clustering, or **combined computer and human inspection**. The last 
 | an amount that is not pay | "Annual Recurring Revenue of $500K", "$5MM" projects, "$15k/month" compute funding | words: revenue, million, MM, funding for compute | 7 |
 | below the US minimum wage | 8,625 a year: a night-shift bonus (Amazon) | < $7.25 an hour, < $15,080 a year (2,080 hours) | 2 |
 | a typo read as an hourly rate | "MIN $167.00 - MAX $279,000.00" (Keysight) | hourly inferred from the amount and ≥ $100 | 3 |
-| spelling variants in titles | "Sr." / "Senior", "–" / "-", double spaces | one form for spaces, dashes, Sr., Jr., Mgr | 0 (20,946 → 20,864 distinct titles) |
+| spelling variants in titles | "Sr." / "Senior", "–" / "-", double spaces | one form for spaces, dashes, Sr., Jr., Mgr | 0 (20,889 → 20,807 distinct titles) |
 
 Binning was not used: smoothing the salary by bin means would replace every real salary with the mean
 of its bin, and the target would lose exactly the detail the model has to learn.
@@ -264,8 +264,8 @@ period because the units differ:
 
 | Period | Outliers | Fences | Most of them |
 |---|---|---|---|
-| year | 1,045 of 25,865 | [15,750, 270,550] | Anthropic 365, OpenAI 217, Netflix 145 |
-| hour | 39 of 1,169 | [0, 60] | Accenture 23 |
+| year | 1,044 of 25,789 | [15,750, 270,550] | Anthropic 365, OpenAI 217, Netflix 145 |
+| hour | 38 of 1,147 | [0, 61] | Accenture 23 |
 | month | 8 of 35 | [6,810, 6,810] | IQR = 0, the rule has no meaning here |
 
 An outlier is not always an error. Above the fence are the real ranges of the AI labs and Netflix (max
@@ -277,15 +277,15 @@ the minimum wage rule, not by IQR. The skewed salary is handled later (transform
 
 | | Rows |
 |---|---|
-| read | 32,010 |
-| no salary | -4,892 |
+| read | 31,901 |
+| no salary | -4,881 |
 | wrong salaries (noise) | -49 |
-| written | **27,069** |
+| written | **26,971** |
 
 ### 4. Data integration
 
-Script `preprocessing/integrate.py`: `data/intermediate/jobs_clean.csv` (27,069 rows) →
-`data/intermediate/jobs_integrated.csv` (25,385 rows). The dataset merges 45 sources (companies) read
+Script `preprocessing/integrate.py`: `data/intermediate/jobs_clean.csv` (26,971 rows) →
+`data/intermediate/jobs_integrated.csv` (25,329 rows). The dataset merges 45 sources (companies) read
 through 17 hiring platforms, so this step checks what happens when the same job or the same kind of value
 comes from different places.
 
@@ -303,10 +303,10 @@ Nothing is left to do here.
 |---|---|---|---|
 | exact | every column equal, same `job_id` (Accenture lists some jobs on two pages) | 150 | one copy |
 | same `job_id`, different values | | 0, not the case | |
-| partial: the same job under another id (a repost, or one copy per city) | same company, title, salary range and description length | 1,534 (Amazon 889, Oracle 275, Apple 169) | the latest posted |
+| partial: the same job under another id (a repost, or one copy per city) | same company, title, salary range and description length | 1,492 (Amazon 889, Oracle 275, Apple 127) | the latest posted |
 | the same job at two companies | | not the case: every company is read from its own site | |
 
-The description is not in the CSV, so its length stands for it. Checked on the raw texts: in 611 of the 888
+The description is not in the CSV, so its length stands for it. Checked on the raw texts: in 586 of the 861
 partial groups the text is the same, and in the others only a city name or the order of the bullets differs.
 Not duplicates: same company, title and salary with another description (another team); they are kept.
 
@@ -327,14 +327,14 @@ Pearson for numeric pairs, Spearman for an ordinal and a numeric one, chi-square
 | `industry` / `company` | Cramér's V = 1.00, the industry is set from the company | both kept: industry is a coarser level (10 groups, not 45); one is chosen at reduction |
 | `salary_min` / `salary_max` | Pearson 0.88 | both kept: they make the target (the middle of the range) |
 | `years_min` / `years_max` | Pearson 0.76 | both kept for now; one is chosen at reduction |
-| `seniority` / `years_min` | Spearman 0.18 | not redundant (`lead` holds managers who ask for few years) |
+| `seniority` / `years_min` | Spearman 0.17 | not redundant (`lead` holds managers who ask for few years) |
 | `seniority` / `role_family`, `seniority` / `degree`, `role_family` / `degree` | Cramér's V 0.24, 0.20, 0.21 | not redundant |
 
 #### Inconsistencies (value conflicts)
 
 | Conflict | Example | Decision |
 |---|---|---|
-| different units | the pay is per year, per hour or per month, depending on the company | converted to a year: hour × 2,080, month × 12 (1,053 rows); `salary_period` keeps the unit of the ad |
+| different units | the pay is per year, per hour or per month, depending on the company | converted to a year: hour × 2,080, month × 12 (1,046 rows); `salary_period` keeps the unit of the ad |
 | the same value written two ways | "GB \| US" and "US \| GB" | `countries` sorted: 29 → 21 distinct values |
 | different currencies | | not the case any more: the non-USD salaries were removed at cleaning |
 | missing values that depend on the source | `work_mode` is never given by HRT, IMC, Infineon, Optiver, SIG; `employment_type` by Atlassian, Cloudflare, DRW, Spotify, Stripe; `states` by Apple, CrowdStrike | kept as `unknown`; counted per company |
@@ -345,15 +345,15 @@ Pearson for numeric pairs, Spearman for an ordinal and a numeric one, chi-square
 
 | | Rows |
 |---|---|
-| read | 27,069 |
+| read | 26,971 |
 | exact duplicates | -150 |
-| partial duplicates | -1,534 |
-| written | **25,385** |
+| partial duplicates | -1,492 |
+| written | **25,329** |
 
 ### 5. Data transformation
 
-Script `preprocessing/transform.py`: `data/intermediate/jobs_integrated.csv` (25,385 rows, 26 columns) →
-`data/intermediate/train_transformed.csv` (20,308 rows) and `test_transformed.csv` (5,077 rows), 199 columns.
+Script `preprocessing/transform.py`: `data/intermediate/jobs_integrated.csv` (25,329 rows, 26 columns) →
+`data/intermediate/train_transformed.csv` (20,263 rows) and `test_transformed.csv` (5,066 rows), 199 columns.
 Every column a model uses is now a number.
 
 #### Train / test split
@@ -372,7 +372,7 @@ Done at cleaning (noisy data). Not repeated here.
 | New column | Built from | Why |
 |---|---|---|
 | `salary` | (`salary_min` + `salary_max`) / 2, yearly USD | the target: one number per ad |
-| `log_salary` | log(`salary`) | the salary is skewed right; skewness 1.99 → -0.43 |
+| `log_salary` | log(`salary`) | the salary is skewed right; skewness 2.00 → -0.43 |
 | `days_old` | crawl day (2026-11-05) - `posted_date`, in days | a date is an interval value; its age in days is a ratio value a model can use |
 | `n_skills` | number of skills in `skills` | how technical the ad is |
 | `<col>_missing` | 1 where the value was missing, 0 otherwise | keeps "the ad does not say it" after the gap is filled (see below) |
@@ -399,7 +399,7 @@ choice between them is made at reduction. Concept hierarchies: see Data discreti
 | one-hot | company, industry, role_family | one 0/1 column per value | 45 + 10 + 18 columns |
 | multi-hot | skills, states (several values per ad) | one 0/1 column per value; an ad can have several 1s | 43 + 52 columns (`state_unknown` included) |
 | label encoding of nominal columns | | not used: a number per company (amazon = 0, apple = 1) invents an order that does not exist | |
-| not encoded | title (20,864 values), cities (1,368) | too many values for one column each; their content is already in role_family, seniority and states | left as text |
+| not encoded | title (20,807 values), cities (1,368) | too many values for one column each; their content is already in role_family, seniority and states | left as text |
 
 #### Missing values left from cleaning
 
@@ -409,12 +409,12 @@ records where a value was filled.
 
 | Column | Train rows filled | With |
 |---|---|---|
-| seniority (unknown) | 7,666 | staff |
-| degree (unknown) | 5,586 | bachelor |
-| work_mode (unknown) | 9,508 | onsite |
-| employment_type (unknown) | 7,552 | full-time |
-| years_min / years_max | 5,680 | 5 / 6 |
-| days_old | 98 | 33 days |
+| seniority (unknown) | 7,630 | staff |
+| degree (unknown) | 5,596 | bachelor |
+| work_mode (unknown) | 9,458 | onsite |
+| employment_type (unknown) | 7,492 | full-time |
+| years_min / years_max | 5,644 | 5 / 6 |
+| days_old | 108 | 31 days |
 
 #### Normalization
 
@@ -424,8 +424,8 @@ that use distances or gradients (k-NN, linear regression, neural networks).
 | Method | Formula | Columns | Result |
 |---|---|---|---|
 | min-max | (x - min) / (max - min) | the 4 ordinal codes | values in [0, 1] |
-| z-score | (x - mean) / std | years_min, years_max, days_old, n_locations, n_skills | train: mean 0, std 1; test: mean within ±0.02, std 0.99-1.00 |
-| log, before z-score | log(1 + x) | days_old, n_locations (a long right tail: posted_date had skewness -7.5, so its age +7.5; n_locations 6.4) | the long tail is pulled in |
+| z-score | (x - mean) / std | years_min, years_max, days_old, n_locations, n_skills | train: mean 0, std 1; test: mean within ±0.02, std 1.00-1.02 |
+| log, before z-score | log(1 + x) | days_old, n_locations (a long right tail: posted_date had skewness -7.6, so its age +7.6; n_locations 6.4) | the long tail is pulled in |
 | decimal scaling | x / 10^j | not used | it only moves the decimal point: the values are not centered, and the outliers stay as far out |
 | none | | the 0/1 columns | already in [0, 1] |
 
@@ -436,7 +436,7 @@ dollars with exp.
 
 | | Train | Test |
 |---|---|---|
-| rows | 20,308 | 5,077 |
+| rows | 20,263 | 5,066 |
 | columns | 199 | 199 |
 
 The columns that are not used as features (`job_id`, `url`, `title`, `cities`, `salary_text`, `salary_min`,
@@ -445,12 +445,12 @@ The columns that are not used as features (`job_id`, `url`, `title`, `cities`, `
 ### 6. Data reduction
 
 Script `preprocessing/reduce.py`: `train_transformed.csv` / `test_transformed.csv` (199 columns) →
-`data/processed/train.csv` (20,308 rows) and `test.csv` (5,077 rows). Each file has `job_id`, 162 features
+`data/processed/train.csv` (20,263 rows) and `test.csv` (5,066 rows). Each file has `job_id`, 161 features
 and the target (`salary`, `log_salary`). Every decision is taken on train and applied to both files the same way.
 
 #### Dimensionality reduction: attribute subset selection
 
-Four filters, one after the other (184 → 162 features):
+Four filters, one after the other (184 → 161 features):
 
 | Filter | Rule | Dropped |
 |---|---|---|
@@ -460,15 +460,15 @@ Four filters, one after the other (184 → 162 features):
 | | **leakage**: `salary_period` is known only from the salary, not from a new ad | 1 |
 | | almost one value: `countries` (99% "US") | 1 |
 | low variance | a 0/1 column with fewer than 20 ones in train: too rare to learn from | 18: 9 companies (Atlassian, Stripe, Spotify, ...), 8 states (AK, HI, WY, ...), `industry_telecom` |
-| redundancy | of two columns with \|Pearson\| > 0.95 in train, the second is dropped | 4: `industry_it_services` (= Accenture, 0.991), `industry_media_entertainment` (= Netflix, 0.959), `industry_aerospace_defense` (= Thales, 1.000), `years_max_missing` (= `years_min_missing`, 1.000) |
+| redundancy | of two columns with \|Pearson\| > 0.95 in train, the second is dropped | 5: `industry_it_services` (= Accenture, 0.992), `industry_media_entertainment` (= Netflix, 0.961), `industry_aerospace_defense` (= Thales, 1.000), `years_max_missing` (= `years_min_missing`, 1.000), `days_old_missing` (= Lenovo, which gives no posting date, 0.957) |
 | relevance | correlation of each feature with `log_salary` in train | none, only printed |
 
 The 9 rare companies are not lost: their industry columns stay. This is why `industry` is kept next to
 `company` (integration: Cramér's V = 1). For the frequent companies it repeats them, for the rare ones it
 replaces them.
 
-Relevance, strongest in train: `years_max` 0.40, `years_min` 0.36, `state_CA` 0.29, `company_anthropic`
-0.26, `company_amazon` -0.26, `skill_Machine Learning` 0.26, `company_openai` 0.23. 27 features have
+Relevance, strongest in train: `years_max` 0.40, `years_min` 0.36, `state_CA` 0.29, `company_amazon`
+-0.26, `company_anthropic` 0.26, `skill_Machine Learning` 0.25, `company_openai` 0.23. 25 features have
 \|r\| < 0.01. They are kept: a correlation with the target only sees one feature at a time, and misses what a
 feature does together with others (a tree model can use them). Stepwise selection and decision-tree
 induction need a model; they belong to the modelling phase.
@@ -479,11 +479,11 @@ PCA on the standardized features of train, computed with SVD:
 
 | Variance kept | Components needed |
 |---|---|
-| 80% | 81 of 162 |
-| 90% | 105 of 162 |
-| 95% | 120 of 162 |
+| 80% | 82 of 161 |
+| 90% | 105 of 161 |
+| 95% | 121 of 161 |
 
-The first component explains 10.0% of the variance, the next ones 3.6% and 3.2%. There is no small number
+The first component explains 10.1% of the variance, the next ones 3.4% and 3.2%. There is no small number
 of directions that holds the data: most features are 0/1 columns that are almost independent. To keep 95%,
 PCA saves a quarter of the columns, and the features lose their meaning ("component 7" instead of
 "company_amazon"). **PCA is not applied.** It can be tried for the linear models in the modelling phase,
@@ -495,25 +495,18 @@ Wavelet transforms: not the case (they are for signals and images, not for a tab
 
 | Method | Here |
 |---|---|
-| sampling (simple random, stratified, cluster) | not applied: Amazon is 36.8% of train, but dropping its ads would throw away real data from a dataset of 25,000 rows. The imbalance is handled when evaluating: the error is reported per company |
+| sampling (simple random, stratified, cluster) | not applied: Amazon is 36.9% of train, but dropping its ads would throw away real data from a dataset of 25,000 rows. The imbalance is handled when evaluating: the error is reported per company |
 | parametric models (regression, log-linear) instead of the data | not the case: the rows are the training data of the model |
 | histograms, clustering | not the case: the dataset fits in memory as it is |
 | data compression | not the case |
-
-#### Found while reducing
-
-`company_apple` and `skill_JavaScript` have a correlation of 0.87: 100% of Apple's ads have JavaScript,
-against 3.2% for the others. Apple's job page ends with "Please enable Javascript in your browser", and the
-skill rules read that line as the skill. This is noise from extraction. The fix belongs in the Apple reader
-(keep only the job's text), followed by running all the steps again.
 
 #### Result
 
 | | Train | Test |
 |---|---|---|
-| rows | 20,308 | 5,077 |
-| features | 162 | 162 |
-| columns (with `job_id` and the target) | 165 | 165 |
+| rows | 20,263 | 5,066 |
+| features | 161 | 161 |
+| columns (with `job_id` and the target) | 164 | 164 |
 
 ### 7. Data discretization
 
@@ -543,10 +536,10 @@ cross-validation on train; `test.csv` is used once, at the end, to report the re
 |---|---|
 | Baseline: the train median | the 0th-order polynomial (y = w0); every other model must beat it to be worth anything |
 | Linear regression | the simplest model: one weight per feature, readable ("+X dollars for staff, for CA"), minimizes the MSE |
-| Ridge regression | linear regression with an L2 penalty on the weights; needed with 162 features and many 0/1 columns that are almost redundant |
+| Ridge regression | linear regression with an L2 penalty on the weights; needed with 161 features and many 0/1 columns that are almost redundant |
 | Polynomial / basis-function regression | adds x², x³ of the numeric features (years, n_locations) to catch curves, e.g. the salary rises fast in the first years and slowly after |
 | Bayesian linear regression | gives a distribution over the weights, so each prediction comes with its uncertainty, and the prior regularizes like Ridge |
-| k-nearest neighbours | predicts the mean salary of the k most similar ads; a simple non-parametric reference, though weak in 162 dimensions |
+| k-nearest neighbours | predicts the mean salary of the k most similar ads; a simple non-parametric reference, though weak in 161 dimensions |
 | Decision tree (CART) | splits on thresholds and categories by itself (no scaling needed), captures interactions such as company × seniority, and can be read |
 | Support vector regression (SVR) | the SVM for numbers: an RBF kernel gives non-linear fits and the soft margin ignores small errors; slow on 20,000 rows (O(n²)) |
 | Random forest | many trees on bootstrap samples, averaged (bagging): more stable than one tree and robust to noise and outliers |
