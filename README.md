@@ -17,6 +17,7 @@ companies.toml ────crawl.py──▶ data/raw/<company>.jsonl.gz ──�
 
 ```
 data/intermediate/jobs.csv ──measuring_data.ipynb──▶ tables + docs/figures/*.png      (3) measure, nothing is changed
+
 data/intermediate/jobs.csv ──clean.py──▶ jobs_clean.csv ──integrate.py──▶ jobs_integrated.csv ──▶ transformation, reduction, discretization (next) ──▶ model
 ```
 
@@ -202,6 +203,80 @@ max 2026-11-05; IQR 70 days, std 138 days, skewness -7.5, kurtosis 85. 849 ads w
 | `seniority`: `lead` (19.2%) holds mostly managers ("Area Manager II"), so its place in the order is debatable | transformation (encoding) |
 
 ### 3. Data cleaning
+
+Script `preprocessing/clean.py`: `data/intermediate/jobs.csv` (32,010 rows) → `data/intermediate/jobs_clean.csv`
+(27,069 rows). The decisions follow the findings of Measuring data.
+
+#### Missing values
+
+Why a value is missing decides how it is handled:
+- **MCAR** (missing completely at random): the gap has nothing to do with the data;
+- **MAR** (at random): it depends on other columns, e.g. on the company's platform;
+- **MNAR** (not at random): it depends on the value itself, e.g. the ad does not state it.
+
+In this dataset an empty cell almost always means "the ad does not say it" (MNAR). For some columns it
+also depends on the company: some platforms never give `work_mode` (MAR). So "not stated" is
+information, and it is kept, not guessed.
+
+Methods from the course, and the one used for each column:
+
+| Column | Missing | Method | Why |
+|---|---|---|---|
+| salary (target) | 4,892 rows (15.3%) | **ignore the tuple** (drop the row) | without the target, a row cannot train the model |
+| salary_max | 695 rows | **fill from the same row**: `salary_max = salary_min` | the ad says "from $X", a single amount |
+| seniority, work_mode, employment_type, degree, states, cities | 4,255 to 12,620 rows | **global constant** `"unknown"` | MNAR / MAR: "not stated" is a category of its own |
+| office_days | 95.7% | **drop the column** | too few values to use |
+| detail_error | 100% | **drop the column** | no values |
+| years_min, years_max, posted_date | 29.7%, 1.4% | **attribute median**, but later, at training | a median over all rows would include the test rows; imputers are fitted on the training set only |
+| skills | 31.7% | none | not missing: the ad names none of the 43 skills, so every skill is 0 |
+
+Not used: filling in by hand (thousands of rows), the class mean (the class is the salary we predict), the most
+probable value from a model (more complex than needed for these columns).
+
+#### Noisy data
+
+Noise is a random error in a value. Here it comes from the extraction rules: an amount near a pay word
+that is not the salary. The course methods are binning (smoothing by bin means, medians or boundaries),
+regression, clustering, and **combined computer and human inspection**. The last one was used:
+- the measures pointed to suspicious values (the min, the low percentiles, the currencies);
+- each case was read by hand in `salary_text`;
+- a rule removes the cases of that kind.
+
+| Noise | Example | Rule | Rows dropped |
+|---|---|---|---|
+| salary in another currency | Cloudflare's Lisbon range in EUR; "AutoCAD" read as CAD | currency is not USD | 37 |
+| an amount that is not pay | "Annual Recurring Revenue of $500K", "$5MM" projects, "$15k/month" compute funding | words: revenue, million, MM, funding for compute | 7 |
+| below the US minimum wage | 8,625 a year: a night-shift bonus (Amazon) | < $7.25 an hour, < $15,080 a year (2,080 hours) | 2 |
+| a typo read as an hourly rate | "MIN $167.00 - MAX $279,000.00" (Keysight) | hourly inferred from the amount and ≥ $100 | 3 |
+| spelling variants in titles | "Sr." / "Senior", "–" / "-", double spaces | one form for spaces, dashes, Sr., Jr., Mgr | 0 (20,946 → 20,864 distinct titles) |
+
+Binning was not used: smoothing the salary by bin means would replace every real salary with the mean
+of its bin, and the target would lose exactly the detail the model has to learn.
+
+#### Outliers
+
+Outliers are values outside [Q1 - 1.5 IQR, Q3 + 1.5 IQR] (the whiskers of the boxplot), counted per pay
+period because the units differ:
+
+| Period | Outliers | Fences | Most of them |
+|---|---|---|---|
+| year | 1,045 of 25,865 | [15,750, 270,550] | Anthropic 365, OpenAI 217, Netflix 145 |
+| hour | 39 of 1,169 | [0, 60] | Accenture 23 |
+| month | 8 of 35 | [6,810, 6,810] | IQR = 0, the rule has no meaning here |
+
+An outlier is not always an error. Above the fence are the real ranges of the AI labs and Netflix (max
+$890,000 - $1,690,000, stated in the ad); removing them would teach the model that no job pays that
+much. So outliers are **counted, not removed**. The wrong low values were already removed as noise, by
+the minimum wage rule, not by IQR. The skewed salary is handled later (transformation: log of the target).
+
+#### Result
+
+| | Rows |
+|---|---|
+| read | 32,010 |
+| no salary | -4,892 |
+| wrong salaries (noise) | -49 |
+| written | **27,069** |
 
 ### 4. Data integration
 
