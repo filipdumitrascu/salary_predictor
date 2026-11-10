@@ -18,7 +18,7 @@ companies.toml ────crawl.py──▶ data/raw/<company>.jsonl.gz ──�
 ```
 data/intermediate/jobs.csv ──measuring_data.ipynb──▶ tables + docs/figures/*.png      (3) measure, nothing is changed
 
-data/intermediate/jobs.csv ──clean.py──▶ jobs_clean.csv ──integrate.py──▶ jobs_integrated.csv ──transform.py──▶ train_transformed.csv + test_transformed.csv ──▶ reduction, discretization (next) ──▶ model
+data/intermediate/jobs.csv ──clean.py──▶ jobs_clean.csv ──integrate.py──▶ jobs_integrated.csv ──transform.py──▶ train_transformed.csv + test_transformed.csv ──reduce.py──▶ data/processed/train.csv + test.csv ──▶ model
 ```
 
 Each step reads the previous step's files and writes new ones; collected data is never edited.
@@ -33,6 +33,7 @@ in seconds, without collecting again. A change in a reader (a field it did not s
 | 4 | `preprocessing/clean.py` | missing values, wrong salaries, noise in titles | remove duplicates, convert salaries |
 | 5 | `preprocessing/integrate.py` | duplicates, salary units, redundant columns | build the target, encode, scale |
 | 6 | `preprocessing/transform.py` | builds the target and new features, splits train / test, encodes, normalizes | choose the features |
+| 7 | `preprocessing/reduce.py` | keeps the features a model can learn from | change the rows |
 
 ## Data sources
 
@@ -443,7 +444,117 @@ The columns that are not used as features (`job_id`, `url`, `title`, `cities`, `
 
 ### 6. Data reduction
 
+Script `preprocessing/reduce.py`: `train_transformed.csv` / `test_transformed.csv` (199 columns) →
+`data/processed/train.csv` (20,308 rows) and `test.csv` (5,077 rows). Each file has `job_id`, 162 features
+and the target (`salary`, `log_salary`). Every decision is taken on train and applied to both files the same way.
+
+#### Dimensionality reduction: attribute subset selection
+
+Four filters, one after the other (184 → 162 features):
+
+| Filter | Rule | Dropped |
+|---|---|---|
+| not a feature | identifiers and checks: `url`, `title`, `cities`, `salary_text`, `seniority_source`, `salary_period_source`, `description_chars` | 7 |
+| | the target before it was built: `salary_min`, `salary_max` | 2 |
+| | one value: `salary_currency` (all USD) | 1 |
+| | **leakage**: `salary_period` is known only from the salary, not from a new ad | 1 |
+| | almost one value: `countries` (99% "US") | 1 |
+| low variance | a 0/1 column with fewer than 20 ones in train: too rare to learn from | 18: 9 companies (Atlassian, Stripe, Spotify, ...), 8 states (AK, HI, WY, ...), `industry_telecom` |
+| redundancy | of two columns with \|Pearson\| > 0.95 in train, the second is dropped | 4: `industry_it_services` (= Accenture, 0.991), `industry_media_entertainment` (= Netflix, 0.959), `industry_aerospace_defense` (= Thales, 1.000), `years_max_missing` (= `years_min_missing`, 1.000) |
+| relevance | correlation of each feature with `log_salary` in train | none, only printed |
+
+The 9 rare companies are not lost: their industry columns stay. This is why `industry` is kept next to
+`company` (integration: Cramér's V = 1). For the frequent companies it repeats them, for the rare ones it
+replaces them.
+
+Relevance, strongest in train: `years_max` 0.40, `years_min` 0.36, `state_CA` 0.29, `company_anthropic`
+0.26, `company_amazon` -0.26, `skill_Machine Learning` 0.26, `company_openai` 0.23. 27 features have
+\|r\| < 0.01. They are kept: a correlation with the target only sees one feature at a time, and misses what a
+feature does together with others (a tree model can use them). Stepwise selection and decision-tree
+induction need a model; they belong to the modelling phase.
+
+#### Dimensionality reduction: PCA
+
+PCA on the standardized features of train, computed with SVD:
+
+| Variance kept | Components needed |
+|---|---|
+| 80% | 81 of 162 |
+| 90% | 105 of 162 |
+| 95% | 120 of 162 |
+
+The first component explains 10.0% of the variance, the next ones 3.6% and 3.2%. There is no small number
+of directions that holds the data: most features are 0/1 columns that are almost independent. To keep 95%,
+PCA saves a quarter of the columns, and the features lose their meaning ("component 7" instead of
+"company_amazon"). **PCA is not applied.** It can be tried for the linear models in the modelling phase,
+fitted on train.
+
+Wavelet transforms: not the case (they are for signals and images, not for a table of ads).
+
+#### Numerosity reduction
+
+| Method | Here |
+|---|---|
+| sampling (simple random, stratified, cluster) | not applied: Amazon is 36.8% of train, but dropping its ads would throw away real data from a dataset of 25,000 rows. The imbalance is handled when evaluating: the error is reported per company |
+| parametric models (regression, log-linear) instead of the data | not the case: the rows are the training data of the model |
+| histograms, clustering | not the case: the dataset fits in memory as it is |
+| data compression | not the case |
+
+#### Found while reducing
+
+`company_apple` and `skill_JavaScript` have a correlation of 0.87: 100% of Apple's ads have JavaScript,
+against 3.2% for the others. Apple's job page ends with "Please enable Javascript in your browser", and the
+skill rules read that line as the skill. This is noise from extraction. The fix belongs in the Apple reader
+(keep only the job's text), followed by running all the steps again.
+
+#### Result
+
+| | Train | Test |
+|---|---|---|
+| rows | 20,308 | 5,077 |
+| features | 162 | 162 |
+| columns (with `job_id` and the target) | 165 | 165 |
+
 ### 7. Data discretization
+
+Discretization is needed only by models that work on categories. For the regressors above it is
+**not needed**: trees and boosting choose their own thresholds (they discretize internally), and the
+linear models, kNN and SVR use the numbers as they are.
+
+| Where it would be worth it | What would be discretized |
+|---|---|
+| **Naive Bayes** (classification) | every numeric feature (years, n_locations, days_old) into bins, and the salary into bands as the class |
+| **Logistic regression** (classification) | the salary into bands (e.g. 4 equal-frequency bands, one per quartile) as the class |
+| **Linear / Ridge regression** (optional) | `years_min` into bins, to compare with the numeric version: bins catch an effect that is not a straight line |
+
+**Decision: no discretization is applied.** The target stays a number and none of the models above
+needs categories.
+
+Concept hierarchies already in the data: company → industry, city → state, title → role_family.
 
 
 ## Models to be run and comparison
+
+The target is a number (`log_salary`, turned back into dollars with exp), so every model below is a
+**regressor**. All are trained on `data/processed/train.csv`; hyperparameters are chosen by 5-fold
+cross-validation on train; `test.csv` is used once, at the end, to report the result.
+
+| Model | Why it fits here |
+|---|---|
+| Baseline: the train median | the 0th-order polynomial (y = w0); every other model must beat it to be worth anything |
+| Linear regression | the simplest model: one weight per feature, readable ("+X dollars for staff, for CA"), minimizes the MSE |
+| Ridge regression | linear regression with an L2 penalty on the weights; needed with 162 features and many 0/1 columns that are almost redundant |
+| Polynomial / basis-function regression | adds x², x³ of the numeric features (years, n_locations) to catch curves, e.g. the salary rises fast in the first years and slowly after |
+| Bayesian linear regression | gives a distribution over the weights, so each prediction comes with its uncertainty, and the prior regularizes like Ridge |
+| k-nearest neighbours | predicts the mean salary of the k most similar ads; a simple non-parametric reference, though weak in 162 dimensions |
+| Decision tree (CART) | splits on thresholds and categories by itself (no scaling needed), captures interactions such as company × seniority, and can be read |
+| Support vector regression (SVR) | the SVM for numbers: an RBF kernel gives non-linear fits and the soft margin ignores small errors; slow on 20,000 rows (O(n²)) |
+| Random forest | many trees on bootstrap samples, averaged (bagging): more stable than one tree and robust to noise and outliers |
+| AdaBoost | boosting: each new tree focuses on the ads the previous ones got wrong |
+| Gradient boosting (XGBoost) | boosting with regularization; usually the strongest model on tables like this one |
+
+Not used: **Naive Bayes** and **logistic regression**. Both predict a class, not a number, and the
+project predicts the salary as a number.
+
+Evaluation: **MAE** (error in dollars, robust to outliers), **RMSE** (punishes large errors), **R²**, all
+on the test set and in dollars, plus the MAE per company (Amazon is 37% of the rows).
